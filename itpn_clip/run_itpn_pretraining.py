@@ -18,7 +18,8 @@ from pathlib import Path
 from timm.models import create_model
 from optim_factory import create_optimizer
 
-from datasets import build_itpn_pretraining_dataset
+# from itpn_datasets import build_itpn_pretraining_dataset
+from itpn_hf_datasets import build_itpn_pretraining_dataset
 from engine_for_pretraining import train_one_epoch
 from utils import NativeScalerWithGradNormCount as NativeScaler
 import utils
@@ -78,7 +79,7 @@ def get_args():
     parser.add_argument('--weight_decay', type=float, default=0.05,
                         help='weight decay (default: 0.05)')
     parser.add_argument('--weight_decay_end', type=float, default=None, help="""Final value of the
-        weight decay. We use a cosine schedule for WD. 
+        weight decay. We use a cosine schedule for WD.
         (Set the same value with args.weight_decay to keep weight decay no change)""")
 
     parser.add_argument('--lr', type=float, default=5e-4, metavar='LR',
@@ -147,6 +148,20 @@ def get_args():
     return parser.parse_args()
 
 
+def debug_at_rank_n(rank_id):
+    """If distributed is initialized, print only on rank n."""
+    if torch.distributed.is_initialized():
+        if torch.distributed.get_rank() == rank_id:
+            message = f'debug at rank {torch.distributed.get_rank()}'
+            # print(message, flush=True)
+            ### print yellow color
+            print(f"\033[93m{message}\033[00m", flush=True)
+            import debugpy; debugpy.listen(5678); debugpy.wait_for_client(); debugpy.breakpoint()
+    else:
+        message = 'You are not in distributed mode.'
+        print(message, flush=True)
+
+
 def get_model(args):
     print(f"Creating model: {args.model}")
     model = create_model(
@@ -175,6 +190,8 @@ def get_clip(args):
 
 def main(args):
     utils.init_distributed_mode(args)
+
+    # debug_at_rank_n(rank_id=0)
 
     print(args)
 

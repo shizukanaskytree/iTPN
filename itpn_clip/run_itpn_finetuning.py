@@ -25,7 +25,7 @@ from timm.models import create_model
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.utils import ModelEma
 
-from datasets import build_dataset
+from itpn_datasets import build_dataset
 from engine_for_finetuning import train_one_epoch, evaluate
 from utils import lr_decay as lrd, NativeScalerWithGradNormCount as NativeScaler
 import utils
