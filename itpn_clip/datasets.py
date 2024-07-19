@@ -17,11 +17,12 @@ from torchvision import datasets, transforms
 from timm.data.constants import \
     IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, IMAGENET_INCEPTION_STD
 from transforms import RandomResizedCropAndInterpolationWithTwoPic
-from timm.data import create_transform, ImageDataset 
+from timm.data import create_transform, ImageDataset
 
 from masking_generator import MaskingGenerator
 from dataset_folder import ImageFolder
-
+from datasets import load_dataset
+from torch.utils.data import Dataset
 
 class DataAugmentationForiTPN(object):
     def __init__(self, args):
@@ -70,12 +71,90 @@ class DataAugmentationForiTPN(object):
         return repr
 
 
+
+
 def build_itpn_pretraining_dataset(args):
     transform = DataAugmentationForiTPN(args)
     print("Data Aug = %s" % str(transform))
     if args.load_tar:
         return ImageDataset(os.path.join(args.data_path, 'train.tar'), transform=transform)
     return ImageFolder(args.data_path, transform=transform)
+
+
+
+def build_imagenet_data(
+        input_size: int = 224,
+        train_batch_size: int = 32,
+        val_batch_size:int = 128,
+        workers: int = 12,
+        dist_sample: bool = False
+    ):
+    """
+    val_batch_size = 64 # max!, resnet:300; vgg: 64
+    """
+    print('==> Using Pytorch Dataset')
+    ds = load_dataset("imagenet-1k")
+    train_ds = ds["train"]
+    val_ds = ds["validation"]
+
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    # Apply transformations to the datasets
+    class TransformedDataset(Dataset):
+        def __init__(self, ds, transform=None):
+            self.ds = ds
+            self.transform = transform
+            self.classes = set(ds['label'])
+
+        def __len__(self):
+            return len(self.ds)
+
+        def __getitem__(self, idx):
+            item = self.ds[idx]
+            image = item['image'].convert('RGB')
+            if self.transform:
+                image = self.transform(image)
+            return image, item['label']
+
+    train_transforms = transforms.Compose([
+            transforms.RandomResizedCrop(input_size),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+    val_transforms = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(input_size),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+    ### Create instances of TransformedDataset with the appropriate transformations
+    train_dataset = TransformedDataset(train_ds, train_transforms)
+    val_dataset = TransformedDataset(val_ds, val_transforms)
+
+    if dist_sample:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+        val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
+    else:
+        train_sampler = None
+        val_sampler = None
+
+    # print(f"train_loader shuffle?: {train_sampler is None}") # True
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=train_batch_size, shuffle=(train_sampler is None),
+        num_workers=workers, pin_memory=True, sampler=train_sampler)
+
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset, batch_size=val_batch_size, shuffle=False,
+        num_workers=workers, pin_memory=True, sampler=val_sampler)
+    print('==> Building dataset done')
+    return train_loader, val_loader
+
+
 
 
 def build_dataset(is_train, args):

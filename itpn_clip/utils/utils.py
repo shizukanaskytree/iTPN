@@ -24,7 +24,8 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
-from torch._six import inf
+# from torch._six import inf
+from math import inf
 # from modeling_discrete_vae import Dalle_VAE, DiscreteVAE
 
 # from vqgan.patch_vqgan import PatchVQGAN, get_default_vqgan_config
@@ -32,8 +33,8 @@ from torch._six import inf
 
 import pdb
 
-from tensorboardX import SummaryWriter
-
+# from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 def bool_flag(s):
     """
