@@ -1,17 +1,16 @@
 import ast
 import os
-import moxing as mox
+# import moxing as mox
 import argparse
 import logging
 import time
 import utils
 
-
 os.environ["NCCL_NET_GDR_LEVEL"] = '0'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_url', type=str, default=' ', help='the output path')
-parser.add_argument('--s3_path', type=str, default='', help='the path of the config file')
+# parser.add_argument('--s3_path', type=str, default='', help='the path of the config file')
 parser.add_argument('--batch_size', type=int, default=64, help='the path of the config file')
 parser.add_argument('--epochs', type=int, default=800, help='the path of the config file')
 parser.add_argument('--warmup_epochs', type=int, default=10, help='the path of the config file')
@@ -48,7 +47,7 @@ parser.add_argument('--min_lr', type=float, default=1e-5, metavar='LR',
 parser.add_argument('--layer_scale_init_value', default=0.1, type=float,
                     help="0.1 for base, 1e-5 for large. set 0 to disable layer scale")
 
-parser.add_argument('--num_gpus', type=int, default=8, help='the number of gpus')
+# parser.add_argument('--num_gpus', type=int, default=8, help='the number of gpus')
 parser.add_argument('--rank', type=int, default=0, help='node rank')
 parser.add_argument('--world_size', type=int, default=2, help='world size')
 parser.add_argument('--init_method', type=str, default='tcp://127.0.0.1:6666')
@@ -58,75 +57,78 @@ parser.add_argument('--num_mask_patches', type=int, default=75, help='the number
 parser.add_argument('--update_freq', type=int, default=1, help='zero stage optimize')
 parser.add_argument('--zero_stage', type=int, default=1, help='zero stage optimize')
 parser.add_argument('--teacher_type', type=str, default='clip')
-parser.add_argument('--teacher_dim', default=512, type=int,
+parser.add_argument('--teacher_dim', default=768, type=int,
                         help='CLIP-B is 512, CLIP-L is 768')
-parser.add_argument('--cache_dir', type=str, default='/cache/eva_clip_psz14.pt')
+parser.add_argument('--cache_dir', type=str, default='/tmp/eva_clip_psz14.pt')
 
 args, unparsed = parser.parse_known_args()
 
-os.system('cat /usr/local/cuda/version.txt')
-os.system('nvcc --version')
-print(args.train_url)
-mox.file.copy_parallel('./CLIP_as_supervision/', args.train_url + '/CLIP_as_supervision-code/')
+# os.system('cat /usr/local/cuda/version.txt')
+# os.system('nvcc --version')
+# print(args.train_url)
+# mox.file.copy_parallel('./CLIP_as_supervision/', args.train_url + '/CLIP_as_supervision-code/')
 # ############# preparation stage ####################
-print('Current path: ' + os.getcwd())
-print('Current dirs: ' + str(list(os.listdir())))
+# print('Current path: ' + os.getcwd())
+# print('Current dirs: ' + str(list(os.listdir())))
 
-os.chdir('./CLIP_as_supervision')
+# os.chdir('./CLIP_as_supervision')
 # print('Current path changed to: ' + os.getcwd())
 
-os.system("pip install torch==1.12.1 torchvision==0.13.1 submitit wandb")
-os.system("pip install regex timm==0.4.12 yacs diffdist termcolor lmdb tensorboard")
+# os.system("pip install torch==1.12.1 torchvision==0.13.1 submitit wandb")
+# os.system("pip install regex timm==0.4.12 yacs diffdist termcolor lmdb tensorboard")
 
-os.system('pip install --ignore-installed PyYAML')
-os.system('pip install ftfy-6.0.1.tar.gz')
-os.system(
-    'pip install -q --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./apex/')
+# os.system('pip install --ignore-installed PyYAML')
+# os.system('pip install ftfy-6.0.1.tar.gz')
+# os.system(
+#     'pip install -q --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./apex/')
 
 ###################################################################################################
-print('Start copying dataset')
-if args.in1k == 1:
-    mox.file.copy_parallel('s3://bucket-3690/tianyunjie/datasets/imagenet-1000-tar/imagenet.tar',
-                           '/cache/imagenet.tar')
-    os.system('tar xf /cache/imagenet.tar -C /cache/')
-else:
-    mox.file.copy_parallel('s3://bucket-3690/tianyunjie/datasets/imagenet-10/', '/cache/imagenet')
-print('Finish copying dataset')
+# print('Start copying dataset')
+# if args.in1k == 1:
+#     mox.file.copy_parallel('s3://bucket-3690/tianyunjie/datasets/imagenet-1000-tar/imagenet.tar',
+#                            '/cache/imagenet.tar')
+#     os.system('tar xf /cache/imagenet.tar -C /cache/')
+# else:
+#     mox.file.copy_parallel('s3://bucket-3690/tianyunjie/datasets/imagenet-10/', '/cache/imagenet')
+# print('Finish copying dataset')
 # #################################################################################################
 #if args.resume_path:
 #mox.file.copy_parallel(args.resume_path, '/cache/output/')
 ###################################################################################################
-if 'eva' in args.teacher_type:
-    mox.file.copy_parallel(args.clip_path, args.cache_dir)
-else:
-    if args.second_input_size == 196 or args.input_size > 224:
-        mox.file.copy_parallel(args.clip_path, '/cache/ViT-L-14.pt')
-        args.clip_path = '/cache/ViT-L-14.pt'
-    else:
-        mox.file.copy_parallel(args.clip_path, '/cache/ViT-B-16.pt')
-        args.clip_path = '/cache/ViT-B-16.pt'
-print('Finish copying dataset')
-os.system('nvcc --version')
+# if 'eva' in args.teacher_type:
+#     mox.file.copy_parallel(args.clip_path, args.cache_dir)
+# else:
+#     if args.second_input_size == 196 or args.input_size > 224:
+#         mox.file.copy_parallel(args.clip_path, '/cache/ViT-L-14.pt')
+#         args.clip_path = '/cache/ViT-L-14.pt'
+#     else:
+#         mox.file.copy_parallel(args.clip_path, '/cache/ViT-B-16.pt')
+#         args.clip_path = '/cache/ViT-B-16.pt'
+# print('Finish copying dataset')
+# os.system('nvcc --version')
 
-time.sleep(30)
+# time.sleep(30)
 ###########################################################################################################
-master_host = os.environ['VC_WORKER_HOSTS'].split(',')[0]
-master_addr = master_host.split(':')[0]
-master_port = '8525'  # '8524'
-modelarts_rank = args.rank  # ModelArts receive FLAGS.rank means node_rank
-modelarts_world_size = args.world_size  # ModelArts receive FLAGS.worldsize means nodes_num
-os.environ['MASTER_ADDR'] = master_addr
-os.environ['MASTER_PORT'] = master_port
+# master_host = os.environ['VC_WORKER_HOSTS'].split(',')[0]
+# master_host = 'localhost'
+# master_addr = master_host.split(':')[0]
+# master_port = '8525'  # '8524'
+# modelarts_rank = args.rank  # ModelArts receive FLAGS.rank means node_rank
+# modelarts_world_size = args.world_size  # ModelArts receive FLAGS.worldsize means nodes_num
+# os.environ['MASTER_ADDR'] = master_addr
+# os.environ['MASTER_PORT'] = master_port
 #######################################################################################################
 
 
-
-cmd_str = f"python -m torch.distributed.launch --nnodes={modelarts_world_size} --nproc_per_node=8 \
-        --node_rank={modelarts_rank} --master_addr={master_addr} --master_port={master_port} \
+nnodes = 1
+node_rank = 0
+master_addr = 'localhost'
+master_port = '8888'
+cmd_str = f"torchrun --nnodes={nnodes} --nproc_per_node=4 \
+        --node_rank={node_rank} --master_addr={master_addr} --master_port={master_port} \
         run_itpn_pretraining.py \
-        --data_path=/cache/imagenet/train \
-        --output_dir=/cache/output/ \
-        --log_dir=/cache/output  \
+        --output_dir=/tmp/output/ \
+        --log_dir=/tmp/output  \
         --model {args.model}  \
         --teacher_type {args.teacher_type} \
         --clip_model EVA_CLIP_g_14_X \
@@ -137,7 +139,6 @@ cmd_str = f"python -m torch.distributed.launch --nnodes={modelarts_world_size} -
         --num_mask_patches {args.num_mask_patches} \
         --layer_scale_init_value {args.layer_scale_init_value}  \
         --batch_size {args.batch_size} \
-        --s3_path {args.s3_path} \
         --lr {args.blr}  \
         --epochs {args.epochs} \
         --warmup_epochs {args.warmup_epochs}  \

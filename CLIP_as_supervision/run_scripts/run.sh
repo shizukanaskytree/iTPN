@@ -1,0 +1,13 @@
+python startup_pt.py \
+    --world_size 4 \
+    --batch_size 32 \
+    --model itpn_base_fusedLN_NaiveSwiGLU_subln_xavier_3324_patch16_224 \
+    --beta 0.98 \
+    --blr 1.5e-3 \
+    --clip_path ../ViT-B-16.pt \
+    --drop_path 0.1 \
+    --epochs 300 \
+    --input_size 224 \
+    --layer_scale_init_value 0.1 \
+    --opt_eps 1e-8 \
+    --second_input_size 224

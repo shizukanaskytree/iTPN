@@ -698,7 +698,7 @@ def itpn_tiny_fusedLN_NaiveSwiGLU_subln_xavier_3324_patch16_224(pretrained=False
         )
         model.load_state_dict(checkpoint["model"])
     return model
-      
+
 
 @register_model
 def itpn_small_fusedLN_NaiveSwiGLU_subln_xavier_3324_patch16_224(pretrained=False, **kwargs):
@@ -897,3 +897,5 @@ def itpn_large_fusedLN_NaiveSwiGLU_subln_xavier_3324_patch16_224(pretrained=Fals
         )
         model.load_state_dict(checkpoint["model"])
     return model
+
+

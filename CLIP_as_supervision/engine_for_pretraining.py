@@ -21,7 +21,7 @@ import utils
 import time
 
 import torch.distributed as dist
-
+import torch.nn.functional as F
 
 def get_loss_scale_for_deepspeed(model):
     optimizer = model.optimizer
@@ -37,6 +37,41 @@ def compute_loss(output, label):
     loss_func = nn.CosineSimilarity(dim=-1)
     loss = loss_func(output.float(), label.float())
     return -loss.mean()
+
+# def compute_loss(outputs, labels):
+#     # Ensure both tensors have the same shape
+#     if outputs.size(1) != labels.size(1):
+#         # Example: if labels have size 768, reshape outputs to have size 768
+#         outputs = outputs.view(-1, labels.size(1))
+
+#     loss = F.cosine_similarity(outputs.float(), labels.float())
+#     return loss
+
+# def compute_loss(outputs, labels):
+#     # Print tensor shapes for debugging
+#     print(f"Outputs shape before reshape: {outputs.shape}")
+#     print(f"Labels shape: {labels.shape}")
+
+#     # Ensure both tensors have the same shape
+#     if outputs.size(1) != labels.size(1):
+#         try:
+#             # Attempt to reshape outputs to match labels' dimensions
+#             outputs = outputs.view(-1, labels.size(1))
+#             print(f"Outputs shape after reshape: {outputs.shape}")
+#         except RuntimeError as e:
+#             print(f"Reshape error: {e}")
+
+#     # Ensure tensors match in dimension 0
+#     if outputs.size(0) != labels.size(0):
+#         min_size = min(outputs.size(0), labels.size(0))
+#         outputs = outputs[:min_size]
+#         labels = labels[:min_size]
+#         print(f"Outputs shape after size adjustment: {outputs.shape}")
+#         print(f"Labels shape after size adjustment: {labels.shape}")
+
+#     # Compute loss
+#     loss = F.cosine_similarity(outputs.float(), labels.float())
+#     return loss
 
 
 def train_one_epoch(model: torch.nn.Module,

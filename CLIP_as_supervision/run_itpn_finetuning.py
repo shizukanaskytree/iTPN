@@ -41,8 +41,8 @@ def get_args():
     parser.add_argument('--epochs', default=30, type=int)
     parser.add_argument('--update_freq', default=1, type=int)
     parser.add_argument('--save_ckpt_freq', default=5, type=int)
-    
-    parser.add_argument('--s3_path', default='itpn_base_3324_patch16_224', type=str, help='Name of model to train')
+
+    # parser.add_argument('--s3_path', default='itpn_base_3324_patch16_224', type=str, help='Name of model to train')
     # Model parameters
     parser.add_argument('--model', default='itpn_base_3324_patch16_224', type=str, metavar='MODEL',
                         help='Name of model to train')

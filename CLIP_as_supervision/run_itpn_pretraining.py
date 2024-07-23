@@ -20,14 +20,15 @@ from pathlib import Path
 from timm.models import create_model
 from optim_factory import create_optimizer, get_parameter_groups
 
-from datasets import build_itpn_pretraining_dataset
+from itpn_hf_datasets import build_dataset
+
 from engine_for_pretraining import train_one_epoch
 from utils import NativeScalerWithGradNormCount as NativeScaler
 import utils
 from clip import *
 from clip_wrapper import *
 import modeling_pretrain
-import moxing as mox
+# import moxing as mox
 
 try:
     import xformers
@@ -49,7 +50,7 @@ def get_args():
     parser.add_argument('--update_freq', default=1, type=int)
     parser.add_argument('--save_ckpt_freq', default=20, type=int)
 
-    parser.add_argument('--s3_path', type=str, default='', help='the path of the OBS')
+    # parser.add_argument('--s3_path', type=str, default='', help='the path of the OBS')
 
     parser.add_argument('--clip_path', type=str, default='../ViT-B-16.pt',
                         help='the path of the CLIP model')
@@ -109,7 +110,7 @@ def get_args():
     parser.add_argument('--weight_decay', type=float, default=0.05,
                         help='weight decay (default: 0.05)')
     parser.add_argument('--weight_decay_end', type=float, default=None, help="""Final value of the
-        weight decay. We use a cosine schedule for WD. 
+        weight decay. We use a cosine schedule for WD.
         (Set the same value with args.weight_decay to keep weight decay no change)""")
 
     parser.add_argument('--lr', type=float, default=1.5e-3, metavar='LR',
@@ -222,7 +223,8 @@ def get_clip(args):
         model_name = 'ViT-L/14'
     else:
         model_name = 'ViT-B/16'
-    model = clip_distill(download_root='/cache/', teacher_size=args.second_input_size, model_name=model_name).eval()
+    print(f"Creating clip teacher: {model_name}") # ViT-B/16
+    model = clip_distill(download_root='/tmp/', teacher_size=args.second_input_size, model_name=model_name).eval()
     return model
 
 
@@ -262,8 +264,8 @@ def main(args, ds_init):
     args.window_size = (args.input_size // patch_size[0], args.input_size // patch_size[1])
     args.patch_size = patch_size
 
-    # get dataset
-    dataset_train = build_itpn_pretraining_dataset(args)
+    ### get dataset
+    dataset_train, nb_classes = build_dataset(is_train=True, args=args)
 
     # prepare teacher
 
@@ -272,6 +274,11 @@ def main(args, ds_init):
         global_rank = utils.get_rank()
         sampler_rank = global_rank
         num_training_steps_per_epoch = len(dataset_train) // args.batch_size // num_tasks // args.update_freq
+        print(f"Debug: len(dataset_train): {len(dataset_train)}")
+        print(f"Debug: args.batch_size: {args.batch_size}")
+        print(f"Debug: num_tasks: {num_tasks}")
+        print(f"Debug: args.update_freq: {args.update_freq}")
+        print(f"Debug: num_training_steps_per_epoch: {num_training_steps_per_epoch}")
 
         sampler_train = torch.utils.data.DistributedSampler(
             dataset_train, num_replicas=num_tasks, rank=sampler_rank, shuffle=True
@@ -339,8 +346,26 @@ def main(args, ds_init):
     )
     if args.weight_decay_end is None:
         args.weight_decay_end = args.weight_decay
+
+    print(f"args.weight_decay: {args.weight_decay}")
+    print(f"args.weight_decay_end: {args.weight_decay_end}")
+    print(f"args.epochs: {args.epochs}")
+    print(f"num_training_steps_per_epoch: {num_training_steps_per_epoch}")
     wd_schedule_values = utils.cosine_scheduler(
         args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch)
+
+
+    # Check and print the contents of wd_schedule_values
+    print("wd_schedule_values:", wd_schedule_values)
+
+    # # Proceed only if wd_schedule_values is not empty
+    # if wd_schedule_values:
+    #     print("Max WD = %.7f, Min WD = %.7f" % (max(wd_schedule_values), min(wd_schedule_values)))
+    # else:
+    #     print("wd_schedule_values is empty. Please check the code that populates this list.")
+    #     # Optionally, raise an error or provide a default value
+    #     raise ValueError("wd_schedule_values is empty")
+
     print("Max WD = %.7f, Min WD = %.7f" % (max(wd_schedule_values), min(wd_schedule_values)))
 
     utils.auto_load_model(
@@ -384,7 +409,7 @@ def main(args, ds_init):
             utils.save_model(
                 args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                 loss_scaler=loss_scaler, epoch=epoch, save_ckpt_freq=args.save_ckpt_freq)
-            mox.file.copy_parallel(args.output_dir, args.s3_path)
+            # mox.file.copy_parallel(args.output_dir, args.s3_path)
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      'epoch': epoch, 'n_parameters': n_parameters}
