@@ -19,11 +19,21 @@ import torch.nn as nn
 import utils
 
 
-def train_one_epoch(model: torch.nn.Module, clip_tea: torch.nn.Module,
-                    data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
-                    log_writer=None, lr_scheduler=None, start_steps=None,
-                    lr_schedule_values=None, wd_schedule_values=None, args=None):
+def train_one_epoch(
+        model: torch.nn.Module,
+        clip_tea: torch.nn.Module,
+        data_loader: Iterable,
+        optimizer: torch.optim.Optimizer,
+        device: torch.device,
+        epoch: int,
+        loss_scaler,
+        max_norm: float = 0,
+        log_writer=None,
+        lr_scheduler=None,
+        start_steps=None,
+        lr_schedule_values=None,
+        wd_schedule_values=None,
+        args=None):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -35,6 +45,10 @@ def train_one_epoch(model: torch.nn.Module, clip_tea: torch.nn.Module,
     loss_fn = nn.SmoothL1Loss()
 
     for step, (batch, extra_info) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+        print(f"step: {step}")
+        if step == 1:
+            break
+
         # assign learning rate & weight decay for each step
         it = start_steps + step  # global training iteration
         if lr_schedule_values is not None or wd_schedule_values is not None:

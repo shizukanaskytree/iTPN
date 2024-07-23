@@ -5,6 +5,37 @@
 # https://github.com/rwightman/pytorch-image-models/tree/master/timm
 # https://github.com/facebookresearch/deit/
 # --------------------------------------------------------'
+
+#------------------------------------------------------------------------------#
+# import os
+# import sys
+# import socket
+# import snoop
+
+# import datetime
+# ### Get the absolute path of the current file
+# current_file_path = os.path.abspath(__file__)
+# ### Extract the file name without the extension
+# file_name = os.path.splitext(os.path.basename(current_file_path))[0]
+# ### Extract the file extension without the dot
+# file_extension = os.path.splitext(os.path.basename(current_file_path))[1][1:]
+# ### use different folders for a multiprocess program
+# hostname = socket.gethostname()
+# process_id = os.getpid()
+# ### Create a folder path by joining the directory of the current file with a new folder name
+# ### The new folder name includes 'logs-', the file name, and the file extension
+# # log_folder = os.path.join(os.path.dirname(current_file_path), 'logs-' + file_name + '-' + file_extension)
+# # log_folder = os.path.join(os.path.dirname(current_file_path), f'logs-{file_name}-pid_{process_id}-{file_extension}')
+# log_folder = os.path.join(os.path.dirname(current_file_path), f'logs-{file_name}-host_{hostname}-pid_{process_id}-{file_extension}')
+# ### Create the directory for the log folder if it doesn't already exist
+# os.makedirs(log_folder, exist_ok=True)
+# ### Generate a timestamp in the format YYYYMMDD_HHMMSS
+# timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# from snoop import spy  # not required if you use install()
+# snoop.install(enabled=True, out=os.path.join(log_folder, f"{file_name}-{timestamp}.log")) # 要写, 否全部在 terminal 出现.
+#------------------------------------------------------------------------------#
+
 import torch
 import torch.nn as nn
 from functools import partial
@@ -20,11 +51,38 @@ from modeling_finetune import PatchMerge, PatchSplit, BlockWithRPE, PatchEmbed
 
 
 class iTPNClipDistill(nn.Module):
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, fpn_dim=256, fpn_depth=2,
-                 embed_dim=512, mlp_depth1=3, mlp_depth2=3, depth=24, num_heads=8, bridge_mlp_ratio=3., mlp_ratio=4.,
-                 qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.0, init_values=None,
-                 norm_layer=nn.LayerNorm, ape=True, rpe=True, patch_norm=True, use_checkpoint=False, teacher_dim=512,
-                 num_outs=1, init_std=0.02, **kwargs):
+    ### 2024-07-22 23:25:55
+    # @spy(watch_explode=['self'])
+    def __init__(
+            self,
+            img_size=224,
+            patch_size=16,
+            in_chans=3,
+            num_classes=1000,
+            fpn_dim=256,
+            fpn_depth=2,
+            embed_dim=512,
+            mlp_depth1=3,
+            mlp_depth2=3,
+            depth=24,
+            num_heads=8,
+            bridge_mlp_ratio=3.,
+            mlp_ratio=4.,
+            qkv_bias=True,
+            qk_scale=None,
+            drop_rate=0.,
+            attn_drop_rate=0.,
+            drop_path_rate=0.0,
+            init_values=None,
+            norm_layer=nn.LayerNorm,
+            ape=True,
+            rpe=True,
+            patch_norm=True,
+            use_checkpoint=False,
+            teacher_dim=512,
+            num_outs=1,
+            init_std=0.02,
+            **kwargs):
         super().__init__()
         assert num_outs in [1, 2, 3, 4, 5]
         self.num_classes = num_classes
@@ -187,6 +245,7 @@ class iTPNClipDistill(nn.Module):
         )
 
         self.apply(self._init_weights)
+        # print("Done with the iTPNClipDistill initialization")
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -224,6 +283,7 @@ class iTPNClipDistill(nn.Module):
         patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
         return patch_pos_embed
 
+    # @spy(watch_explode=['self'])
     def forward_features_for_pretraining(self, x, bool_masked_pos):
         B, C, H, W = x.shape
         x = self.patch_embed(x)  # B*L*4*4*C
@@ -283,8 +343,11 @@ class iTPNClipDistill(nn.Module):
 
         for blk in self.cls_pt_layers:
             aux_out = blk(aux_out, rpe_index)
+
+        # print("Done with the forward_features_for_pretraining")
         return outs, aux_out
 
+    # @spy(watch_explode=['self'])
     def forward(self, x, bool_masked_pos):
         outs, aux_out = self.forward_features_for_pretraining(x, bool_masked_pos=bool_masked_pos)
 
@@ -301,9 +364,10 @@ class iTPNClipDistill(nn.Module):
         x = self.norm(x)
         aux_x = self.norm_cls(aux_out)
         # return [self.lm_head(x[bool_masked_pos]), self.lm_cls_head(aux_x[bool_masked_pos])]
+        # print("Done with the forward")
         return [self.lm_head(x), self.lm_cls_head(aux_x)]  # we supervise all tokens as default
 
-
+### wxf todo
 @register_model
 def clip_tpn_base_3324_patch16_224(pretrained=False, **kwargs):
     model = iTPNClipDistill(
@@ -339,7 +403,7 @@ def clip_tpn_large_2240_patch16_256(pretrained=False, **kwargs):
     model = iTPNClipDistill(
         img_size=256,
         patch_size=16, embed_dim=768, mlp_depth1=2, mlp_depth2=2, depth=40, num_heads=12,
-        bridge_mlp_ratio=3., mlp_ratio=4, num_outs=3, fpn_dim=256, fpn_depth=1, 
+        bridge_mlp_ratio=3., mlp_ratio=4, num_outs=3, fpn_dim=256, fpn_depth=1,
         norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     model.default_cfg = _cfg()
     if pretrained:

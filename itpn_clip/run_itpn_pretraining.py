@@ -8,6 +8,113 @@
 # https://github.com/facebookresearch/deit/
 # --------------------------------------------------------'
 
+# #------------------------------------------------------------------------------#
+# import os
+# import sys
+# import socket
+# import snoop
+
+# import datetime
+# ### Get the absolute path of the current file
+# current_file_path = os.path.abspath(__file__)
+# ### Extract the file name without the extension
+# file_name = os.path.splitext(os.path.basename(current_file_path))[0]
+# ### Extract the file extension without the dot
+# file_extension = os.path.splitext(os.path.basename(current_file_path))[1][1:]
+# ### use different folders for a multiprocess program
+# hostname = socket.gethostname()
+# process_id = os.getpid()
+# ### Create a folder path by joining the directory of the current file with a new folder name
+# ### The new folder name includes 'logs-', the file name, and the file extension
+# # log_folder = os.path.join(os.path.dirname(current_file_path), 'logs-' + file_name + '-' + file_extension)
+# # log_folder = os.path.join(os.path.dirname(current_file_path), f'logs-{file_name}-pid_{process_id}-{file_extension}')
+# log_folder = os.path.join(os.path.dirname(current_file_path), f'logs-{file_name}-host_{hostname}-pid_{process_id}-{file_extension}')
+# ### Create the directory for the log folder if it doesn't already exist
+# os.makedirs(log_folder, exist_ok=True)
+# ### Generate a timestamp in the format YYYYMMDD_HHMMSS
+# timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# from snoop import spy  # not required if you use install()
+# snoop.install(enabled=True, out=os.path.join(log_folder, f"{file_name}-{timestamp}.log")) # 要写, 否全部在 terminal 出现.
+# #------------------------------------------------------------------------------#
+
+################################################################################
+# import datetime
+# import os
+# import sys
+# import socket
+
+# ### Get the absolute path of the current file
+# current_file_path = os.path.abspath(__file__)
+# ### Extract the file name without the extension
+# file_name = os.path.splitext(os.path.basename(current_file_path))[0]
+# ### Extract the file extension without the dot
+# file_extension = os.path.splitext(os.path.basename(current_file_path))[1][1:]
+# ### use different folders for a multiprocess program
+# hostname = socket.gethostname()
+# process_id = os.getpid()
+# ### Create a folder path by joining the directory of the current file with a new folder name
+# ### The new folder name includes 'logs-', the file name, and the file extension
+# # log_folder = os.path.join(os.path.dirname(current_file_path), 'logs-' + file_name + '-' + file_extension)
+# # log_folder = os.path.join(os.path.dirname(current_file_path), f'logs-{file_name}-pid_{process_id}-{file_extension}')
+# log_folder = os.path.join(os.path.dirname(current_file_path), f'logs-{file_name}-host_{hostname}-pid_{process_id}-{file_extension}')
+# ### Create the directory for the log folder if it doesn't already exist
+# os.makedirs(log_folder, exist_ok=True)
+# ### Generate a timestamp in the format YYYYMMDD_HHMMSS
+# timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# import git
+
+# ### Check if the code is within the desired directory or repository
+# repo = git.Repo('.', search_parent_directories=True)
+# ### Get the repo path
+# repo_path = repo.git.rev_parse("--show-toplevel")
+# # print(f"repo_path: {repo_path}")
+# ### 建议手动写, 有时 git 获得 repo_path 会报错
+# # repo_path = "/home/xiaofeng.wu/prjs/iTPN/itpn_clip"
+
+# ### 你可以修改 tracefunc 函数以仅将输出写入文件而不打印在终端上。你只需要移除将消息写入 original_stdout 的部分
+# def tracefunc(frame, event, arg, indent=[0], output_file=None, original_stdout=None):
+#     """
+#     tracefunc is defined to trace the execution of functions. It takes several parameters:
+#         frame: The current stack frame.
+#         event: The type of event that occurred (e.g., "call", "return").
+#         arg: Additional argument (not used in this code).
+#         indent: A list used to keep track of the indentation level for the output.
+#         output_file: A file object where trace messages will be written.
+#         original_stdout: The original standard output stream for console logging.
+#     """
+#     ### Get the file path and line number of the code being executed
+#     file_path = frame.f_globals.get('__file__')
+#     line_num = frame.f_lineno
+
+#     ### If file_path is not None, it's converted to an absolute path.
+#     if file_path:
+#         file_path = os.path.abspath(file_path)
+#         ### Check if the code is within the desired directory or repository
+#         if file_path.startswith(repo_path):
+#             if event == "call":
+#                 ### Increases the indentation level.
+#                 indent[0] += 2
+#                 ### Constructs a message indicating the function call with the function name, file path, and line number.
+#                 msg = f"{'-' * indent[0]}> call function {frame.f_code.co_name} in {file_path}:{line_num}\n"
+#                 ### Writes the message to both output_file and original_stdout.
+#                 output_file.write(msg)
+#                 if original_stdout:
+#                     original_stdout.write(msg)
+#             elif event == "return":
+#                 ### Constructs a message indicating the function exit with the function name, file path, and line number.
+#                 msg = f"<{'-' * indent[0]} exit function {frame.f_code.co_name} in {file_path}:{line_num}\n"
+#                 ### Writes the message to both output_file and original_stdout.
+#                 output_file.write(msg)
+#                 ### Decreases the indentation level.
+#                 if original_stdout:
+#                     original_stdout.write(msg)
+#                 indent[0] -= 2
+#     return tracefunc
+################################################################################
+
+
 import argparse
 import datetime
 import time
@@ -59,8 +166,7 @@ def get_args():
 
     parser.add_argument('--input_size', default=224, type=int,
                         help='images input size for backbone')
-    parser.add_argument('--second_input_size', default=192, type=int,
-                        help='images input size for discrete vae')
+    parser.add_argument('--second_input_size', default=192, type=int, help='images input size for discrete vae')
 
     parser.add_argument('--drop_path', type=float, default=0.1, metavar='PCT',
                         help='Drop path rate (default: 0.1)')
@@ -188,6 +294,7 @@ def get_clip(args):
     return model
 
 
+# @spy(watch_explode=['args'])
 def main(args):
     utils.init_distributed_mode(args)
 
@@ -283,6 +390,10 @@ def main(args):
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
+        print(f"training epoch {epoch}")
+        if epoch == 1:
+            break
+
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
         if log_writer is not None:
@@ -317,6 +428,39 @@ def main(args):
 
 
 if __name__ == '__main__':
+    # ############################################################################
+    # ### Open the file to save the trace output
+
+    # ### This constructs the path for the trace output file by joining log_folder
+    # ### with a filename that includes a timestamp. The timestamp variable is
+    # ### assumed to be a string representing the current time.
+    # tracing_filename = os.path.join(log_folder, f"tracing-{file_name}-{timestamp}.log")
+
+    # ### This opens the file in write mode ("w") and assigns the file object to
+    # ### output_file. This file will be used to save the trace output.
+    # output_file = open(tracing_filename, "w")
+
+    # ### This line stores the original standard output stream (sys.stdout) in the
+    # ### variable original_stdout. This allows you to write trace messages to both
+    # ### the trace file and the console.
+    # original_stdout = None # sys.stdout
+
+    # ### Set the profile function with the output file
+    # ### - sys.setprofile: This function sets the system's profiling function,
+    # ###   which is called on every function call and return.
+    # ### - lambda frame, event, arg: tracefunc(frame, event, arg,
+    # ###   output_file=output_file, original_stdout=original_stdout): This is a
+    # ###   lambda function that wraps the tracefunc with the additional arguments
+    # ###   output_file and original_stdout.
+    # ###   - frame: The current stack frame.
+    # ###   - event: The type of event (e.g., "call", "return").
+    # ###   - arg: Additional argument (not used in this code).
+    # ###   This lambda function ensures that every function call and return event
+    # ###   in the program is handled by tracefunc, which will log the event details
+    # ###   to the output_file and the console (original_stdout).
+    # sys.setprofile(lambda frame, event, arg: tracefunc(frame, event, arg, output_file=output_file, original_stdout=original_stdout))
+    # ############################################################################
+
     opts = get_args()
     if opts.output_dir:
         Path(opts.output_dir).mkdir(parents=True, exist_ok=True)

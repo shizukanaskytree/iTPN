@@ -79,7 +79,7 @@ class TransformedDataset(Dataset):
 def build_itpn_pretraining_dataset(args):
     transform = DataAugmentationForiTPN(args)
     print("Data Aug = %s" % str(transform))
-    dataset = load_dataset('imagenet-1k', split='train')
+    dataset = load_dataset('imagenet-1k', split='train', trust_remote_code=True)
     transformed_dataset = TransformedDataset(dataset, transform)
     return transformed_dataset
 
