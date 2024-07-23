@@ -26,11 +26,11 @@ from timm.data import create_transform
 from masking_generator import MaskingGenerator
 from dataset_folder import ImageFolder
 
-
+### done
 def map2pixel4peco(x):
     return x * 255
 
-
+### done
 class DataAugmentationForEVA(object):
     def __init__(self, args):
         imagenet_default_mean_and_std = args.imagenet_default_mean_and_std
@@ -90,7 +90,7 @@ class DataAugmentationForEVA(object):
         repr += ")"
         return repr
 
-
+### it is NOT used anywhere.
 def build_eva_pretraining_dataset(args):
     transform = DataAugmentationForEVA(args)
     print("Data Aug = %s" % str(transform))
@@ -166,7 +166,7 @@ def build_val_dataset_for_pt(is_train, args):
 
     return dataset, nb_classes
 
-
+### done
 class RandomResizedCrop(transforms.RandomResizedCrop):
     """
     RandomResizedCrop for matching TF/TPU implementation: no for-loop is used.
@@ -196,7 +196,7 @@ class RandomResizedCrop(transforms.RandomResizedCrop):
 
         return i, j, h, w
 
-
+### done
 def build_transform(is_train, args):
     resize_im = args.input_size > 32
     imagenet_default_mean_and_std = args.imagenet_default_mean_and_std

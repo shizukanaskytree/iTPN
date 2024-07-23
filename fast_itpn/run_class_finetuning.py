@@ -29,13 +29,18 @@ from timm.models.layers import trunc_normal_
 from optim_factory import create_optimizer, get_parameter_groups, LayerDecayValueAssigner
 
 ### todo
-from datasets import build_dataset
+# from datasets import build_dataset
+# from itpn_hf_datasets import build_dataset
+from itpn_hf_datasets import build_eva_pretraining_dataset
+
 from engine_for_finetuning import train_one_epoch, evaluate, evaluate_real
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import LARS
 import utils
 from scipy import interpolate
 import modeling_finetune
+
+### What is this?
 # import imagenet_a_r_indices
 
 
@@ -167,10 +172,10 @@ def get_args():
     parser.add_argument('--probe_then_ft', action='store_true')
 
     # Dataset parameters
-    parser.add_argument('--data_path', default='/path/to/IN-1K', type=str,
-                        help='dataset path')
-    parser.add_argument('--eval_data_path', default=None, type=str,
-                        help='dataset path for evaluation')
+    # parser.add_argument('--data_path', default='/path/to/IN-1K', type=str,
+    #                     help='dataset path')
+    # parser.add_argument('--eval_data_path', default=None, type=str,
+    #                     help='dataset path for evaluation')
     parser.add_argument('--nb_classes', default=1000, type=int,
                         help='number of the classification types')
     parser.add_argument('--imagenet_default_mean_and_std', default=False, action='store_true')
@@ -221,6 +226,11 @@ def get_args():
     parser.add_argument('--zero_stage', default=0, type=int,
                         help='ZeRO optimizer stage (default: 0)')
     parser.add_argument('--bf16', default=False, action='store_true')
+    ### for what?
+    parser.add_argument('--second_input_size', default=192, type=int, help='images input size for discrete vae')
+    parser.add_argument('--crop_scale', type=float, default=0.2, metavar='PCT', help='min_crop_scale (default: 0.08)')
+    # add crop_ratio
+    parser.add_argument('--crop_ratio', type=float, default=0.75, metavar='PCT', help='crop_ratio (default: 0.75)'
 
     known_args, _ = parser.parse_known_args()
 
@@ -258,8 +268,7 @@ def main(args, ds_init):
     np.random.seed(seed)
 
     cudnn.benchmark = True
-
-    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
+    dataset_train, args.nb_classes = build_eva_pretraining_dataset(is_train=True, args=args)
 
     if args.disable_eval_during_finetuning:
         dataset_val = None
@@ -270,7 +279,7 @@ def main(args, ds_init):
         from objectnet_dataset import ObjectNetDataset
         dataset_val = ObjectNetDataset(args.eval_data_path)
     else:
-        dataset_val, _ = build_dataset(is_train=False, args=args)
+        dataset_val, _ = build_eva_pretraining_dataset(is_train=False, args=args)
 
     if True:  # args.distributed:
         num_tasks = utils.get_world_size()
@@ -374,11 +383,15 @@ def main(args, ds_init):
         for k in ['head.weight', 'head.bias']:
             if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
                 if args.robust_test == 'imagenet_r':
-                    mask = torch.tensor(imagenet_a_r_indices.imagenet_r_mask)
-                    checkpoint_model[k] = checkpoint_model[k][mask]
+                    ### What is imagenet_a_r_indices? It is not imported.
+                    # mask = torch.tensor(imagenet_a_r_indices.imagenet_r_mask)
+                    # checkpoint_model[k] = checkpoint_model[k][mask]
+                    ...
                 elif args.robust_test == 'imagenet_a':
-                    mask = torch.tensor(imagenet_a_r_indices.imagenet_a_mask)
-                    checkpoint_model[k] = checkpoint_model[k][mask]
+                    ### What is imagenet_a_r_indices? It is not imported.
+                    # mask = torch.tensor(imagenet_a_r_indices.imagenet_a_mask)
+                    # checkpoint_model[k] = checkpoint_model[k][mask]
+                    ...
                 else:
                     print(f"Removing key {k} from pretrained checkpoint")
                     del checkpoint_model[k]
@@ -687,6 +700,7 @@ def main(args, ds_init):
 
     if args.eval:
         if args.real_labels:
+            ### what is imagenet_real?
             from imagenet_real import RealLabelsImagenet
             real_labels = RealLabelsImagenet(dataset_val.filenames(), real_json=args.real_labels)
             evaluate_real(data_loader_val, model, device, real_labels, ds=args.enable_deepspeed, bf16=args.bf16)
