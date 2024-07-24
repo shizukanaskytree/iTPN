@@ -107,6 +107,12 @@ def train_one_epoch(model: torch.nn.Module,
     for data_iter_step, (batch, extra_info) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         # assign learning rate & weight decay for each step
 
+        ### wxf: for profiling
+        print(f"Data iter step: {data_iter_step}...")
+        if data_iter_step == 1:
+            print('break, profiling stops...')
+            break
+
         step = data_iter_step // update_freq
 
         it = start_steps + step  # global training iteration

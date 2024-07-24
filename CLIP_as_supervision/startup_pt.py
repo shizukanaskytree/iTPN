@@ -119,6 +119,8 @@ args, unparsed = parser.parse_known_args()
 # os.environ['MASTER_PORT'] = master_port
 #######################################################################################################
 
+cmd_str = f"rm -r /tmp/output"
+os.system(cmd_str)
 
 nnodes = 1
 node_rank = 0
