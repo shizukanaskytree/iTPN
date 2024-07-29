@@ -2,12 +2,12 @@
 
 Official PyTorch implementation and pretrained models of [iTPN](https://arxiv.org/pdf/2211.12735.pdf) (CLIP as supervision).
 
-## iTPN Pre-Training on ImageNet-1K: 
+## iTPN Pre-Training on ImageNet-1K:
 
 <details>
  <summary> Pre-train <b>iTPN-B</b> using <b>CLIP-B</b>:</summary>
 
-```bash    
+```bash
 python startup_clip.py \
     --world_size 8 \
     --batch_size 32 \
@@ -22,10 +22,10 @@ python startup_clip.py \
     --opt_eps 1e-8 \
     --second_input_size 224 \
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_pretraining.py \
     --world_size 8 \
@@ -48,7 +48,7 @@ python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NO
 <details>
  <summary> Pre-train <b>iTPN-B</b> using <b>CLIP-L</b>:</summary>
 
-```bash    
+```bash
 python startup_clip.py \
     --world_size 8 \
     --batch_size 32 \
@@ -63,10 +63,10 @@ python startup_clip.py \
     --opt_eps 1e-8 \
     --second_input_size 196 \
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_pretraining.py \
     --world_size 8 \
@@ -89,7 +89,7 @@ python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NO
 <details>
  <summary> Pre-train <b>iTPN-L/16</b> using <b>CLIP-B</b>:</summary>
 
-```bash    
+```bash
 python startup_clip.py \
     --world_size 8 \
     --batch_size 32 \
@@ -104,10 +104,10 @@ python startup_clip.py \
     --opt_eps 1e-8 \
     --second_input_size 224 \
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_pretraining.py \
     --world_size 8 \
@@ -129,7 +129,7 @@ python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NO
 <details>
  <summary> Pre-train <b>iTPN-L/16</b> using <b>CLIP-L</b>:</summary>
 
-```bash    
+```bash
 python startup_clip.py \
     --world_size 8 \
     --batch_size 32 \
@@ -144,10 +144,10 @@ python startup_clip.py \
     --opt_eps 1e-8 \
     --second_input_size 196 \
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_pretraining.py \
     --world_size 8 \
@@ -169,7 +169,7 @@ python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NO
 <details>
  <summary> Pre-train <b>iTPN-L/14</b> using <b>CLIP-L</b>:</summary>
 
-```bash    
+```bash
 python startup_clip.py \
     --world_size 8 \
     --batch_size 32 \
@@ -184,10 +184,10 @@ python startup_clip.py \
     --opt_eps 1e-8 \
     --second_input_size 225 \
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_pretraining.py \
     --world_size 8 \
@@ -206,7 +206,7 @@ python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NO
 </details>
 
 
-## iTPN Fine-Tuning on ImageNet-1K: 
+## iTPN Fine-Tuning on ImageNet-1K:
 
 <details>
  <summary> Fine-tune <b>iTPN-B</b>:</summary>
@@ -228,10 +228,10 @@ python startup_ft.py \
     --cutmix  1.0 \
     --weight_decay 0.05
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_finetuning.py \
     --world_size 4 \
@@ -272,10 +272,10 @@ python startup_ft.py \
     --cutmix  1.0 \
     --weight_decay 0.05
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_finetuning.py \
     --world_size 4 \
@@ -315,10 +315,10 @@ python startup_ft.py \
     --cutmix  1.0 \
     --weight_decay 0.05
 ```
- 
- OR 
 
-```bash    
+ OR
+
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NODE_RANK \
     --master_addr=$MASTER_ADDR --master_port=6666  run_itpn_finetuning.py \
     --world_size 4 \
@@ -339,7 +339,11 @@ python -m torch.distributed.launch --nproc_per_node=8 --nnodes 8 --node_rank=$NO
 </details>
 
 
-## iTPN Intermediate Fine-Tuning on ImageNet-21K: 
+## iTPN Intermediate Fine-Tuning on ImageNet-21K:
 
 come soon ...
+
+## Setup Steps
+
+Install apex: https://github.com/NVIDIA/apex
 
